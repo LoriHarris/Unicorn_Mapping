@@ -1,4 +1,3 @@
-// Store our API endpoint inside queryUrl
 var url = "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2014-01-01&endtime=" +
   "2014-01-02&maxlongitude=-69.52148437&minlongitude=-123.83789062&maxlatitude=48.74894534&minlatitude=25.16517337";
 
@@ -54,6 +53,20 @@ var url = "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&startt
   }).addTo(myMap);
 
   
- 
+   
+  
+    for (var i = 0; i < earthquakeData.length; i++) {
+      var geometry =earthquakeData[i].geometry;
+      
+      if (geometry) {
+        circles.push(
+          L.circle(([geometry.coordinates[1], geometry.coordinates[0]]), {}
+            radius: (properties.mag)*1000)
+        
+      }
+    }
+  console.log(circles);
+  
+  };
 
   
