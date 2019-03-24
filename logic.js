@@ -55,18 +55,4 @@ var url = "http://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&startt
   
    
   
-    for (var i = 0; i < earthquakeData.length; i++) {
-      var geometry =earthquakeData[i].geometry;
-      
-      if (geometry) {
-        circles.push(
-          L.circle(([geometry.coordinates[1], geometry.coordinates[0]]), {}
-            radius: (properties.mag)*1000)
-        
-      }
-    }
-  console.log(circles);
-  
-  };
-
   
