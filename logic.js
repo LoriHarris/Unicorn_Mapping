@@ -1,8 +1,18 @@
-var url = "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&starttime=2014-01-01&endtime=" +
-  "2014-01-02&maxlongitude=-69.52148437&minlongitude=-123.83789062&maxlatitude=48.74894534&minlatitude=25.16517337";
+var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson";
 
 var circles = [];
 var popUp = [];
+function getColor(d) {
+  return d < 1 ? '#ffffcc' :
+         d < 2  ? '#ffeda0' :
+         d < 3  ? '#fed976' :
+         d < 4  ? '#feb24c' :
+         d < 5   ? '#fd8d3c' :
+         d < 6   ? '#fc4e2a' :
+         d < 7   ? '#e31a1c' :
+         d < 8   ? '#bd0026' :
+                    '#800026';
+}
 d3.json(url, function(response) {
     
     createFeatures(response.features);
@@ -16,22 +26,7 @@ d3.json(url, function(response) {
       var properties = earthquakeData[i].properties;
       var magRadius = properties.mag;
    
-      // console.log(magRadius)
-      if (magRadius < 1){
-        var magColor = "#f0ff00"
-      };
-      if (magRadius >1 && magRadius<2){
-        var magColor= "#ffce00"
-      };
-      if (magRadius >2 && magRadius<3){
-        var magColor= "#ff9a00"
-      };
-      if (magRadius >3 && magRadius<4){
-        var magColor= "#ff5a00"
-      };
-      if (magRadius >5 && magRadius<4){
-        var magColor= "#ff0000"
-      };
+      
       if (geometry) {
         popUp.push(
           L.circleMarker(([geometry.coordinates[1], geometry.coordinates[0]]))
@@ -41,9 +36,9 @@ d3.json(url, function(response) {
           L.circle(([geometry.coordinates[1], geometry.coordinates[0]]), {
             stroke: false,
             fillOpacity: (properties.mag)*.2,
-            color: "purple",
-            fillColor: magColor,
-            radius: (properties.mag)*50000
+            color: "black",
+            fillColor: getColor(properties.mag),
+            radius: (properties.mag)*30000
         })
             .bindPopup("<h3>Magnitude: " + magRadius + "<h3><h3>Location: " + properties.place + "<h3>")
             .on('click'));    
@@ -51,10 +46,10 @@ d3.json(url, function(response) {
     
   }; 
 // console.log(cityList);
-var streetmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
+var satellite = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}", {
   attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
   maxZoom: 18,
-  id: "mapbox.streets",
+  id: "mapbox.satellite",
   accessToken: API_KEY
 });
 
@@ -66,22 +61,39 @@ var darkmap = L.tileLayer("https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?
 });
 var magnitude = L.featureGroup(circles);
 var popUp1 = L.layerGroup(popUp);
-// var magnitude1 = L.featureGroup(circles)
-//   .bindPopup("<h3>" + magList + "<h3><h3>Capacity: " + cityList + "<h3>")
-//   .on('click');
+
 var basemaps = {
-  "Street Map" : streetmap,
+  "Satellite Map" : satellite,
   "Dark Map" : darkmap
 };
 var overlaymaps = {
   "Magnitude Radius" : magnitude,
-  "Popup" : popUp1
+  // "Popup" : popUp1
 };
 var myMap = L.map("map", {
   center: [37.09, -95.71],
   zoom: 4,
-  layers: [streetmap, popUp1, magnitude]
-});
+  layers: [satellite, magnitude]
+});var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        magRange = [0,1,2,3,4,5,6,7,8],
+        labels = [];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < magRange.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(magRange[i] + 1) + '"></i> ' +
+            magRange[i] + (magRange[i + 1] ? '&ndash;' + magRange[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(myMap);
 L.control.layers(basemaps, overlaymaps, {
   collapsed: false
 }).addTo(myMap)};
+
